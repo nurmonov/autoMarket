@@ -4,20 +4,26 @@ import jakarta.persistence.*;
 import lombok.*;
 
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Setter
-@Getter
-@Builder
 @Entity
+@Table(name = "car_images")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CarImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    private String imageUrl; // Rasmni manzili (path yoki URL)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private CarAd carAd;
 
-    @ManyToOne
-    @JoinColumn(name = "car_id")
-    private Car car;
+    @Column(nullable = false)
+    private String imageUrl;  // Cloudinary URL yoki path
+
+    private boolean isMain = false;  // Asosiy rasm
+
+    private Integer orderIndex = 0;  // Tartib
 }

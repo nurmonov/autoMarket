@@ -7,10 +7,10 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class AdminStatsDTO {
-    private Integer totalAds;
-    private Integer totalUsers;
-    private Double platformEfficiency;
+@AllArgsConstructor
+public class CarAdApproveRequest {
+    private Long carAdId;
+    private boolean approve;
+    private String rejectReason;
 }

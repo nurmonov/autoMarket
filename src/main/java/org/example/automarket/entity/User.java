@@ -2,74 +2,84 @@ package org.example.automarket.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.automarket.entity.enums.Role;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import org.example.automarket.entity.enums.Role;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-
-@AllArgsConstructor
-@NoArgsConstructor
-@Setter
-@Getter
-@Builder
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
-
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
+public class User implements UserDetails {  // Spring Security uchun UserDetails implement qilindi
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String phone;  // +998... asosiy identifier
+
+    @Column(unique = true)
+    private String email;
+
+    private String password;  // BCrypt encoded (Security da ishlatiladi)
 
     private String fullName;
 
-    @Column(unique = true, nullable = false)
-    private String email; // Bu bizda username vazifasini bajaradi
+    private String region;  // Toshkent, Samarqand...
 
-    private String password;
-
-    private String phoneNumber;
+    private String city;
 
     @Enumerated(EnumType.STRING)
-    private Role role; // ADMIN yoki USER
+    private Role role = Role.USER;  // Default USER
 
-    // Spring Security metodlari
+    private boolean isActive = true;
+
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+    // UserDetails methods (Spring Security uchun)
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Role asosida huquqlarni qaytaramiz
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));  // ROLE_USER, ROLE_ADMIN...
     }
 
     @Override
     public String getUsername() {
-        return email; // Tizimga email orqali kiriladi
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
+        return phone;  // Phone ni username sifatida ishlatamiz
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Hisob muddati o'tmagan
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Bloklanmagan
+        return isActive;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Parol muddati o'tmagan
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return true; // Foydalanuvchi faol
+        return isActive;
     }
 }

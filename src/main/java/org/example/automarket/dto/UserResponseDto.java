@@ -10,10 +10,13 @@ import org.example.automarket.entity.enums.Role;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserProfileDTO {
-    private Integer id;
+public class UserResponseDto {
+    private Long id;
+    private String phone;
     private String fullName;
-    private String email;
-    private String phoneNumber;
-    private Role role;
+    private String region;
+    private String city;
+    private String role;
+    private boolean active;
+
 }

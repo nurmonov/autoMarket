@@ -1,5 +1,6 @@
 package org.example.automarket.dto;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,10 +8,10 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class ModelDTO {
-    private Integer id;
+@AllArgsConstructor
+public class BrandResponseDto {
+    private Long id;
     private String name;
-    private Integer brandId;
+    private String logoUrl;     // agar logo bo'lsa
 }

@@ -4,6 +4,6 @@ package org.example.automarket.entity.enums;
 public enum Transmission {
     AVTOMAT,
     MEXANIKA,
-    VARIATOR,
-    ROBOT
+    CVT,
+    ROBOTIC
 }

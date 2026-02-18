@@ -3,22 +3,28 @@ package org.example.automarket.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@Setter
+@Table(name = "brands")
 @Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Brand {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    private String name; // Masalan: "Chevrolet", "BMW"
+    private Long id;
 
-    @OneToMany(mappedBy = "brand")
-    private List<Model> models;
+    @Column(unique = true, nullable = false)
+    private String name;  // Toyota, Chevrolet...
+
+    private String logoUrl;  // Optional logo
+
+    @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL)
+    private List<Model> models = new ArrayList<>();
 }
 
 
