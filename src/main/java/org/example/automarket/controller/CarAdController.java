@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/cars")
+@RequestMapping("/api/cars")
 @RequiredArgsConstructor
 public class CarAdController {
 

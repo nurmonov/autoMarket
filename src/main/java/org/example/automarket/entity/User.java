@@ -44,6 +44,7 @@ public class User implements UserDetails {  // Spring Security uchun UserDetails
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;  // Default USER
 
+    @Builder.Default
     private boolean isActive = true;
 
     @CreatedDate

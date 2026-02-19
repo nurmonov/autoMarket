@@ -6,21 +6,24 @@ import org.example.automarket.dto.AuthResponse;
 import org.example.automarket.dto.LoginRequest;
 import org.example.automarket.dto.UserRegisterRequest;
 import org.example.automarket.entity.User;
-import org.example.automarket.security.JwtService;
+import org.example.automarket.repo.UserRepository;
+import org.example.automarket.security.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserService userService;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-
+    private final JwtUtil jwtService;
+    private  final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     /**
      * Yangi foydalanuvchi ro'yxatdan o'tkazadi va JWT token qaytaradi
      */
@@ -30,6 +33,7 @@ public class AuthService {
 
         return new AuthResponse(
                 token,
+                "Bearer ",
                 user.getPhone(),
                 user.getFullName(),
                 user.getRole().name()
@@ -39,27 +43,28 @@ public class AuthService {
     /**
      * Login qiladi va muvaffaqiyatli bo'lsa JWT token qaytaradi
      */
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getPhone(),
-                        request.getPassword()
-                )
-        );
+        User user = userRepository.findByPhone(request.getPhone())
+                .orElseThrow(() -> new BadCredentialsException("Telefon raqami yoki parol noto'g'ri"));
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Telefon raqami yoki parol noto'g'ri");
+        }
 
-        // Agar User entity UserDetails ni implement qilgan bo'lsa, to'g'ridan-to'g'ri ishlatamiz
-        User user = userService.findByPhone(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Foydalanuvchi topilmadi"));
+        if (!user.isActive()) {
+            throw new DisabledException("Hisobingiz faol emas");
+        }
 
-        String token = jwtService.generateToken(userDetails);
+        String token = jwtService.generateToken(user);
 
-        return new AuthResponse(
-                token,
-                user.getPhone(),
-                user.getFullName(),
-                user.getRole().name()
-        );
+        return AuthResponse.builder()
+                .token(token)
+                .tokenType("Bearer ")
+                .phone(user.getPhone())
+                .fullName(user.getFullName())
+                .role(user.getRole().name())
+                .build();
     }
+
 }

@@ -67,8 +67,11 @@ public class CarAd {
 
     private boolean isFeatured = false;  // Featured e'lon (pullik?)
 
+    @Builder.Default
     @OneToMany(mappedBy = "carAd", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CarImage> images = new ArrayList<>();
+
+
 
     @CreatedDate
     private LocalDateTime createdAt;
