@@ -36,30 +36,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 🔥 SHU YO‘Q
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
+                        // Ochiq endpointlar (permitAll)
                         .requestMatchers(
-                                "/api/files/upload-multiple/**",
-                                "/api/auth/**",
+                                "/api/auth/**",                  // login/register
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/api/files/download/**",
-                                "/uploads/**",
-                                "/api/test/**"
-                                //                        "/api/files/upload/**"
+                                "/swagger-resources/**",
+                                "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/api/files/monitoring/**").permitAll()
+
+                        // Admin uchun maxsus endpointlar
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Sotuvchi va admin uchun e'lonlar bilan ishlash
+                        .requestMatchers("/api/v1/cars/**").hasAnyRole("SELLER", "ADMIN")
+
+                        // Foydalanuvchi uchun o'z sahifalari (masalan /api/v1/users/me)
+                        .requestMatchers("/api/v1/users/me", "/api/v1/users/change-password", "/api/v1/users/my-stats", "/api/v1/users/my-ads").authenticated()
+
+                        // Hozircha barcha qolgan endpointlar autentifikatsiya talab qiladi
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class);
+
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
