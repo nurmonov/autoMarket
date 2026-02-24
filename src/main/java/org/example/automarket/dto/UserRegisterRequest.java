@@ -20,7 +20,7 @@ public class UserRegisterRequest {
     private String email;
 
     @NotBlank(message = "Parol bo'sh bo'lishi mumkin emas")
-    @Size(min = 8, max = 100, message = "Parol kamida 8 ta belgidan iborat bo'lishi kerak")
+   // @Size(min = 8, max = 100, message = "Parol kamida 8 ta belgidan iborat bo'lishi kerak")
     private String password;
 
     @NotBlank(message = "Ism familiya bo'sh bo'lishi mumkin emas")

@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,10 +32,8 @@ public class CarAdController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
-    public ResponseEntity<CarAdDetailDto> create(
-            @Valid @RequestPart("request") CarAdCreateRequest request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        CarAdDetailDto dto = carAdService.createCarAd(request, images);
+    public ResponseEntity<CarAdDetailDto> create(@Valid @RequestBody CarAdCreateRequest request) {
+        CarAdDetailDto dto = carAdService.createCarAd(request, List.of());  // rasmlarsiz yaratamiz
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 

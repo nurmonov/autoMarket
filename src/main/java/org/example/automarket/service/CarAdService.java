@@ -1,6 +1,7 @@
 package org.example.automarket.service;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.automarket.dto.*;
 import org.example.automarket.entity.enums.AdStatus;
@@ -33,7 +34,7 @@ public class CarAdService {
 
     private final CarAdRepository carAdRepository;
     private final ModelRepository modelRepository;
-//    private final CarImageService carImageService;
+    private final CarImageService carImageService;
     private final AutoMarketMapper mapper;
     private final FavoriteService favoriteService;
     private final UserRepository userRepository;
@@ -43,7 +44,7 @@ public class CarAdService {
         User currentUser = getCurrentUser();
 
         Model model = modelRepository.findById(request.getModelId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Model topilmadi"));
+                .orElseThrow(() -> new EntityNotFoundException("Model topilmadi"));
 
         CarAd carAd = mapper.toCarAd(request);
         carAd.setSeller(currentUser);
@@ -53,9 +54,10 @@ public class CarAdService {
 
         carAd = carAdRepository.save(carAd);
 
-//        if (!images.isEmpty()) {
-//            carImageService.uploadImages(carAd.getId(), images);
-//        }
+        // Rasmlar bo'lsa yuklaymiz (hozircha bo'sh jo'natiladi)
+        if (!images.isEmpty()) {
+            carImageService.uploadImages(carAd.getId(), images);
+        }
 
         return mapper.toCarAdDetailDto(carAd);
     }
