@@ -1,5 +1,4 @@
-package org.example.automarket.security;
-
+package org.example.automarket.security;  // o'zingizning package'ingizga moslashtiring
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,20 +28,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final   JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
-
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        config.setAllowedOrigins(List.of("*"));               // endi * ishlaydi
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedOrigins(List.of("*"));                     // test uchun * — keyin aniq domainlarga o'zgartirsa bo'ladi
+        config.setAllowedMethods(List.of("*"));                     // OPTIONS, GET, POST, PUT, DELETE, PATCH hammasi
         config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(false);                    // ← bu yerda false
+        config.setExposedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(false);                          // * bilan true bo'lmaydi
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -53,19 +49,43 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // CORS ni albatta ulaymiz
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Preflight OPTIONS so'rovlari uchun – eng muhim!
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+
+                        // 2. Swagger / OpenAPI yo'llari – to'liq ochiq (springdoc uchun)
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/v3/api-docs",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/index.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // 3. Auth va test/fayl yo'llari (sizning loyihangizga moslashtiring)
+                        .requestMatchers("/api/auth/**",
+                                "/api/files/upload-multiple/**",
+                                "/api/files/download/**",
+                                "/uploads/**",
+                                "/api/test/**",
+                                "/api/files/monitoring/**"
+                        ).permitAll()
+
+                        // 4. Admin va boshqa cheklovlar (kerak bo'lsa qayta qo'shing)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/cars/**").hasAnyRole("SELLER", "ADMIN")
-                        .requestMatchers("/api/v1/users/me", "/api/v1/users/change-password", "/api/v1/users/my-stats", "/api/v1/users/my-ads").authenticated()
+
+                        // 5. Qolgan hamma narsa autentifikatsiya talab qiladi
                         .anyRequest().authenticated()
                 )
+
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -86,16 +106,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(12);
     }
 
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
-
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
-
         return authProvider;
     }
-
 }

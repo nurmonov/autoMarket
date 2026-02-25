@@ -55,7 +55,6 @@ public class CarAd {
     @Enumerated(EnumType.STRING)
     private BodyType bodyType;
 
-    @Lob  // Uzun tavsif uchun
     private String description;
 
     private String vin;  // VIN raqami (optional)

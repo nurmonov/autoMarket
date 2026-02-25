@@ -62,14 +62,7 @@ public class CarAdService {
         return mapper.toCarAdDetailDto(carAd);
     }
 
-    @Transactional(readOnly = true)
-    public Page<CarAdSummaryDto> searchCarAds(CarAdSearchRequest searchRequest, Pageable pageable) {
-        Specification<CarAd> spec = CarAdSpecification.search(searchRequest)
-                .and((root, query, cb) -> cb.equal(root.get("status"), AdStatus.APPROVED));  // faqat tasdiqlanganlar
 
-        Page<CarAd> page = carAdRepository.findAll(spec, pageable);
-        return page.map(this::mapToSummaryWithFavorite);
-    }
 
     @Transactional(readOnly = true)
     public CarAdDetailDto getCarAdDetail(Long id) {
@@ -144,5 +137,19 @@ public class CarAdService {
         CarAdSummaryDto dto = mapper.toCarAdSummaryDto(carAd);
         dto.setFavorite(favoriteService.isFavorite(carAd.getId()));
         return dto;
+    }
+    @Transactional(readOnly = true)
+    public Page<CarAdSummaryDto> searchCarAds(CarAdSearchRequest request, Pageable pageable) {
+        Specification<CarAd> spec = CarAdSpecification.search(request)
+                .and((root, query, cb) -> cb.equal(root.get("status"), AdStatus.APPROVED));
+
+        Page<CarAd> page = carAdRepository.findAll(spec, pageable);
+
+        return page.map(carAd -> {
+            CarAdSummaryDto dto = mapper.toCarAdSummaryDto(carAd);
+            // Agar joriy user uchun isFavorite kerak bo‘lsa qo‘shsa bo‘ladi
+            // dto.setIsFavorite(favoriteService.isFavorite(carAd.getId()));
+            return dto;
+        });
     }
 }

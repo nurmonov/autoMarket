@@ -95,11 +95,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
+        String method = request.getMethod();
+
+        // OPTIONS ni umuman filtrlamaymiz
+        if ("OPTIONS".equals(method)) {
+            return true;
+        }
+
         return path.startsWith("/swagger-ui/")
                 || path.startsWith("/v3/api-docs/")
+                || path.equals("/swagger-ui.html")
+                || path.equals("/swagger-ui/index.html")
                 || path.startsWith("/api/auth/")
-                || "OPTIONS".equals(request.getMethod());
+                || path.startsWith("/webjars/");
     }
 }

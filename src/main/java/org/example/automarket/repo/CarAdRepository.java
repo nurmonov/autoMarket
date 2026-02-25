@@ -38,6 +38,7 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
     Page<CarAd> findBySellerIdAndStatus(Long sellerId, AdStatus status, Pageable pageable);
 
 
+    List<CarAd> findAllByStatusOrderByCreatedAtDesc(AdStatus status);
 }
 
 

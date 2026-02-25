@@ -1,6 +1,5 @@
 package org.example.automarket.mapper;
 
-// AutoMarketMapper.java (MapStruct interface - barcha mappinglar bitta interfaceda, lekin alohida package ga qo'yasiz)
 import org.example.automarket.dto.*;
 import org.example.automarket.entity.*;
 import org.example.automarket.entity.enums.BodyType;
@@ -58,6 +57,11 @@ public interface AutoMarketMapper {
 
     List<CarAdSummaryDto> toCarAdSummaryDtoList(List<CarAd> carAds);
 
+    @Mapping(target = "carAdId", source = "carAd.id")
+    CarImageResponseDto toCarImageResponseDto(CarImage image);
+
+    // Agar List uchun kerak bo‘lsa (avto generatsiya qilinadi, lekin aniq yozsa yaxshi)
+    List<CarImageResponseDto> toCarImageResponseDtoList(List<CarImage> images);
     // CarAd detail
     @Mapping(target = "brandName", source = "model.brand.name")
     @Mapping(target = "modelName", source = "model.name")
