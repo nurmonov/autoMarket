@@ -57,14 +57,14 @@ public class CarAd {
 
     private String description;
 
-    private String vin;  // VIN raqami (optional)
+    private String vin;
 
-    private String stateNumber;  // Davlat raqami (optional)
+    private String stateNumber;
 
     @Enumerated(EnumType.STRING)
     private AdStatus status = AdStatus.PENDING;
 
-    private boolean isFeatured = false;  // Featured e'lon (pullik?)
+    private boolean isFeatured = false;
 
     @Builder.Default
     @OneToMany(mappedBy = "carAd", cascade = CascadeType.ALL, orphanRemoval = true)

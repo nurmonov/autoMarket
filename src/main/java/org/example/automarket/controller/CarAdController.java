@@ -3,6 +3,9 @@ package org.example.automarket.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -90,25 +93,32 @@ public class CarAdController {
         return ResponseEntity.ok().build();
     }
 
-//    @Operation(
-//            summary = "Barcha tasdiqlangan mashinalarni olish",
-//            description = "Hech qanday filtr va pagination siz hammasini olib keladi. " +
-//                    "Eng yangi e'lonlar birinchi chiqadi."
-//    )
-//    @ApiResponses({
-//            @ApiResponse(responseCode = "200", description = "Barcha mashinalar ro'yxati muvaffaqiyatli qaytarildi"),
-//            @ApiResponse(responseCode = "401", description = "Autentifikatsiya talab qilinadi")
-//    })
-//    @GetMapping("/all-simple")
-//    public ResponseEntity<List<CarAdSummaryDto>> getAllCarsSimple() {
-//
-//        // Faqat tasdiqlanganlar, eng yangi birinchi
-//        List<CarAd> cars = carAdRepository.findAllByStatusOrderByCreatedAtDesc(AdStatus.APPROVED);
-//
-//        List<CarAdSummaryDto> dtos = cars.stream()
-//                .map(mapper::toCarAdSummaryDto)
-//                .collect(Collectors.toList());
-//
-//        return ResponseEntity.ok(dtos);
-//    }
+
+
+
+    @GetMapping("/admin/all-cars")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CarAdSummaryDto>> getAllCarsForAdmin() {
+        return ResponseEntity.ok(carAdService.getAllCarsForAdmin());
+    }
+
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tanlangan statusdagi mashinalar ro'yxati"),
+            @ApiResponse(responseCode = "400", description = "Noto'g'ri status kiritildi"),
+            @ApiResponse(responseCode = "403", description = "Faqat ADMIN roli uchun")
+    })
+    @GetMapping("/by-status/{status}")
+    public ResponseEntity<List<CarAdSummaryDto>> getCarsByStatus(
+            @Parameter(
+                    required = true,
+                    example = "APPROVED",
+                    schema = @Schema(implementation = AdStatus.class)
+            )
+            @PathVariable AdStatus status) {
+
+        List<CarAdSummaryDto> cars = carAdService.getCarsByStatus(status);
+
+        return ResponseEntity.ok(cars);
+    }
 }

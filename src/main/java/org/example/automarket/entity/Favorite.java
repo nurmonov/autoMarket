@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+//@Builder
 public class Favorite {
 
     @EmbeddedId
@@ -28,4 +28,14 @@ public class Favorite {
     private CarAd carAd;
 
     private LocalDateTime addedAt = LocalDateTime.now();
+
+    @Builder
+    public Favorite(User user, CarAd carAd, LocalDateTime addedAt) {
+        this.user = user;
+        this.carAd = carAd;
+        this.addedAt = addedAt != null ? addedAt : LocalDateTime.now();
+
+        // 🔥 ID avtomatik yaratiladi
+        this.id = new FavoriteId(user.getId(), carAd.getId());
+    }
 }

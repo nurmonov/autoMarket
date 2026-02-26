@@ -132,20 +132,22 @@ public class CarImageController {
         return ResponseEntity.ok(response);
     }
 
-    // 4. Bir nechta rasmni o'chirish (qo‘shimcha, agar kerak bo'lsa)
-    @DeleteMapping("/bulk-delete")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<CarImageDeleteResponse> deleteMultipleImages(
-            @RequestBody @Valid CarImageDeleteRequest request) {
+//    // 4. Bir nechta rasmni o'chirish (qo‘shimcha, agar kerak bo'lsa)
+//    @DeleteMapping("/bulk-delete")
+//    @PreAuthorize("isAuthenticated()")
+//    public ResponseEntity<CarImageDeleteResponse> deleteMultipleImages(
+//            @RequestBody @Valid CarImageDeleteRequest request) {
+//
+//        request.getImageIds().forEach(carImageService::deleteImage);
+//
+//        CarImageDeleteResponse response = CarImageDeleteResponse.builder()
+//                .deletedImageId(null) // bulk bo'lgani uchun null
+//                .message(request.getImageIds().size() + " ta rasm muvaffaqiyatli o'chirildi")
+//                .success(true)
+//                .build();
+//
+//        return ResponseEntity.ok(response);
+//    }
 
-        request.getImageIds().forEach(carImageService::deleteImage);
 
-        CarImageDeleteResponse response = CarImageDeleteResponse.builder()
-                .deletedImageId(null) // bulk bo'lgani uchun null
-                .message(request.getImageIds().size() + " ta rasm muvaffaqiyatli o'chirildi")
-                .success(true)
-                .build();
-
-        return ResponseEntity.ok(response);
-    }
 }

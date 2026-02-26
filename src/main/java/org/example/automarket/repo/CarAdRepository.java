@@ -39,6 +39,10 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
 
 
     List<CarAd> findAllByStatusOrderByCreatedAtDesc(AdStatus status);
+
+    // Hamma statusdagi e'lonlar, eng yangi birinchi
+    List<CarAd> findAllByOrderByCreatedAtDesc();
+
 }
 
 

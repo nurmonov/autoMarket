@@ -27,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -151,5 +152,36 @@ public class CarAdService {
             // dto.setIsFavorite(favoriteService.isFavorite(carAd.getId()));
             return dto;
         });
+    }
+    // CarAdService.java
+    @Transactional(readOnly = true)
+    public List<CarAdSummaryDto> getAllApprovedCars() {
+        // Repo dan faqat tasdiqlanganlarni, eng yangi birinchi olamiz
+        List<CarAd> cars = carAdRepository.findAllByStatusOrderByCreatedAtDesc(AdStatus.APPROVED);
+
+        // DTO ga aylantiramiz
+        return cars.stream()
+                .map(mapper::toCarAdSummaryDto)
+                .collect(Collectors.toList());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<CarAdSummaryDto> getAllCarsForAdmin() {
+        List<CarAd> cars = carAdRepository.findAllByOrderByCreatedAtDesc();
+        return cars.stream()
+                .map(mapper::toCarAdSummaryDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<CarAdSummaryDto> getCarsByStatus(AdStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status qiymati bo'sh bo'lishi mumkin emas");
+        }
+
+        List<CarAd> cars = carAdRepository.findAllByStatusOrderByCreatedAtDesc(status);
+
+        return cars.stream()
+                .map(mapper::toCarAdSummaryDto)
+                .collect(Collectors.toList());
     }
 }
