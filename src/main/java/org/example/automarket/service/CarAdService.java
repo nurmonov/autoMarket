@@ -193,4 +193,12 @@ public class CarAdService {
                 .map(mapper::toCarAdSummaryDto)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public Page<CarAdSummaryDto> getApprovedCars(Pageable pageable) {
+
+        Page<CarAd> page = carAdRepository.findAllByStatus(AdStatus.APPROVED, pageable);
+
+        return page.map(carAd -> mapper.toCarAdSummaryDto(carAd));
+    }
 }

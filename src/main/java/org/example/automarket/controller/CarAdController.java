@@ -3,20 +3,12 @@ package org.example.automarket.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.automarket.dto.CarAdCreateRequest;
-import org.example.automarket.dto.CarAdSearchRequest;
-import org.example.automarket.dto.CarAdUpdateRequest;
-import org.example.automarket.dto.ModerateCarAdRequest;
-import org.example.automarket.dto.CarAdDetailDto;
-import org.example.automarket.dto.CarAdSummaryDto;
-import org.example.automarket.entity.CarAd;
+import org.example.automarket.dto.*;
 import org.example.automarket.entity.enums.AdStatus;
 import org.example.automarket.mapper.AutoMarketMapper;
 import org.example.automarket.repo.CarAdRepository;
@@ -26,16 +18,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cars")
@@ -110,6 +98,7 @@ public class CarAdController {
             @ApiResponse(responseCode = "403", description = "Faqat ADMIN roli uchun")
     })
     @GetMapping("/by-status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CarAdSummaryDto>> getCarsByStatus(
             @Parameter(
                     required = true,
@@ -125,18 +114,39 @@ public class CarAdController {
 
 
     @Operation(
-            summary = "Hozirda sotuvdagi barcha mashinalarni olish"
-
+            summary = "Sotuvdagilarni olish hamasini  "
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sotuvdagi mashinalar ro'yxati muvaffaqiyatli qaytarildi"),
-            @ApiResponse(responseCode = "401", description = "Autentifikatsiya talab qilinadi")
-    })
     @GetMapping("/active")
     public ResponseEntity<List<CarAdSummaryDto>> getActiveCars() {
 
         List<CarAdSummaryDto> cars = carAdService.getAllActiveCars();
 
         return ResponseEntity.ok(cars);
+    }
+
+    @Operation(
+            summary = "Sotuvdagilarni olish pagenation bilan "
+    )
+    @GetMapping("/approved")
+    public ResponseEntity<Page<CarAdSummaryDto>> getApprovedCars(
+            @RequestParam(defaultValue = "0") int page,
+
+            @RequestParam(defaultValue = "5") int size,
+
+            @RequestParam(defaultValue = "price") String sortBy,
+
+            @RequestParam(defaultValue = "desc") String direction) {
+
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(direction), sortBy)
+        );
+
+
+        Page<CarAdSummaryDto> result = carAdService.getApprovedCars(pageable);
+
+        return ResponseEntity.ok(result);
     }
 }
