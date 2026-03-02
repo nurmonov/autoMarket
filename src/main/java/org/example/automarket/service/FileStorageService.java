@@ -1,6 +1,7 @@
 package org.example.automarket.service;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,60 +12,75 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+
 @Service
+@Slf4j
 public class FileStorageService {
 
-    private final Path rootLocation = Paths.get("uploads/cars");  // loyiha ildizida "uploads/cars" papkasi
+    private static final String UPLOAD_ROOT = "uploads";
 
-    public FileStorageService() {
-        try {
-            Files.createDirectories(rootLocation);
-        } catch (IOException e) {
-            throw new RuntimeException("Uploads papkasi yaratib bo‘lmadi", e);
+    // Papka nomi uchun enum (keyinchalik qo‘shish oson bo‘lishi uchun)
+    public enum EntityType {
+        CARS("cars"),
+        BRANDS("brands"),
+        MODELS("models");
+
+        private final String folderName;
+
+        EntityType(String folderName) {
+            this.folderName = folderName;
+        }
+
+        public String getFolderName() {
+            return folderName;
         }
     }
 
-    /**
-     * Rasmni serverga saqlaydi va URL qaytaradi
-     * @param file yuklanayotgan rasm
-     * @param carAdId e'lon ID si (papka nomi uchun)
-     * @return saqlangan rasmning URL si (masalan /uploads/cars/123/image.jpg)
-     */
-    public String store(MultipartFile file, Long carAdId) {
+    public String store(MultipartFile file, Long entityId, EntityType entityType) {
         try {
-            if (file.isEmpty()) {
-                throw new IllegalArgumentException("Fayl bo'sh");
+            if (file == null || file.isEmpty()) {
+                throw new IllegalArgumentException("Fayl bo'sh yoki null");
             }
 
-            // Fayl nomini unique qilish (UUID + original name)
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : ".jpg";
+
+            // Fayl nomini unique qilish (UUID + extension)
             String filename = UUID.randomUUID() + extension;
 
-            // Papka: uploads/cars/{carAdId}
-            Path carDir = rootLocation.resolve(carAdId.toString());
-            Files.createDirectories(carDir);
+            // Papka: uploads/{entityType}/{entityId}
+            String subFolder = entityType.getFolderName() + "/" + entityId;
+            Path dir = Paths.get(UPLOAD_ROOT, subFolder);
+            Files.createDirectories(dir);
 
-            Path destination = carDir.resolve(filename);
+            Path destination = dir.resolve(filename);
             Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
 
-            // URL qaytarish (frontend uchun /uploads/... ishlatiladi)
-            return "/uploads/cars/" + carAdId + "/" + filename;
+            // Qaytariladigan URL
+            String url = "/" + UPLOAD_ROOT + "/" + subFolder + "/" + filename;
+            log.info("Fayl saqlandi: {}", url);
+
+            return url;
 
         } catch (IOException e) {
+            log.error("Fayl saqlashda xato: {}", e.getMessage(), e);
             throw new RuntimeException("Rasm saqlanmadi", e);
         }
     }
 
-    // Agar kerak bo'lsa: rasmni o'chirish
     public void delete(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) return;
+
         try {
-            // URL dan path ni ajratib olish
-            Path filePath = Paths.get("." + fileUrl); // loyiha ildizidan
-            Files.deleteIfExists(filePath);
+            // URL dan real path ni olish
+            Path path = Paths.get("." + fileUrl);
+            if (Files.deleteIfExists(path)) {
+                log.info("Fayl o'chirildi: {}", fileUrl);
+            }
         } catch (IOException e) {
-            // O'chirishda xato bo'lsa log qilish mumkin, lekin to'xtatmaymiz
-            System.err.println("Rasm o'chirishda xato: " + e.getMessage());
+            log.warn("Fayl o'chirishda xato: {}", e.getMessage());
         }
     }
 }

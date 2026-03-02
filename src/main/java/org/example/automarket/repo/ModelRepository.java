@@ -1,6 +1,5 @@
 package org.example.automarket.repo;
 
-// ModelRepository.java
 import org.example.automarket.entity.Model;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

@@ -51,8 +51,7 @@ public interface AutoMarketMapper {
     @Mapping(target = "bodyType", source = "bodyType", qualifiedByName = "enumToString")
     @Mapping(target = "color", source = "color", qualifiedByName = "enumToString")
     @Mapping(target = "mainImageUrl", expression = "java(getMainImageUrl(carAd))")
-//    @Mapping(target = "region", source = "seller.region")
-//    @Mapping(target = "currency", constant = "UZS")  // Statik, keyin o'zgartirsa bo'ladi
+    @Mapping(target = "description", source = "description")   // 🔥 mana shu qatorni qo‘shing
     CarAdSummaryDto toCarAdSummaryDto(CarAd carAd);
 
     List<CarAdSummaryDto> toCarAdSummaryDtoList(List<CarAd> carAds);

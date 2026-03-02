@@ -1,5 +1,8 @@
 package org.example.automarket.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.automarket.dto.BrandCreateRequest;
@@ -7,9 +10,11 @@ import org.example.automarket.dto.BrandResponseDto;
 import org.example.automarket.dto.BrandUpdateRequest;
 import org.example.automarket.service.BrandService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -47,5 +52,26 @@ public class BrandController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         brandService.deleteBrand(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @PostMapping(value = "/{brandId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BrandResponseDto> updateBrandLogo(
+            @Parameter(description = "Brend ID si", required = true, example = "5")
+            @PathVariable Long brandId,
+
+            @Parameter(
+                    description = "Yuklanadigan logo fayli (jpg/png, maksimal 5MB)",
+                    required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(type = "string", format = "binary"))
+            )
+            @RequestParam("logo") MultipartFile logoFile) {
+
+        // Service chaqiruvi — butun logika shu yerda
+        BrandResponseDto updatedBrand = brandService.updateBrandLogo(brandId, logoFile);
+
+        return ResponseEntity.ok(updatedBrand);
     }
 }

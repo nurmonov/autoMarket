@@ -10,9 +10,9 @@ import lombok.*;
 @AllArgsConstructor
 public class UserRegisterRequest {
 
-    @NotBlank(message = "Telefon raqami bo'sh bo'lishi mumkin emas")
-    @Size(min = 9, max = 13, message = "Telefon raqami +998 formatida bo'lishi kerak")
-    @Pattern(regexp = "^\\+998[0-9]{9}$", message = "Telefon raqami +998 bilan boshlanishi va 9 ta raqamdan iborat bo'lishi kerak")
+//    @NotBlank(message = "Telefon raqami bo'sh bo'lishi mumkin emas")
+//    @Size(min = 9, max = 13, message = "Telefon raqami +998 formatida bo'lishi kerak")
+//    @Pattern(regexp = "^\\+998[0-9]{9}$", message = "Telefon raqami +998 bilan boshlanishi va 9 ta raqamdan iborat bo'lishi kerak")
     private String phone;
 
     @Email(message = "Email noto'g'ri formatda")

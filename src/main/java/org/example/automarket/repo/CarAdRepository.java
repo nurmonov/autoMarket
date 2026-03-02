@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,10 +39,12 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
     Page<CarAd> findBySellerIdAndStatus(Long sellerId, AdStatus status, Pageable pageable);
 
 
-    List<CarAd> findAllByStatusOrderByCreatedAtDesc(AdStatus status);
+    @Query("SELECT c FROM CarAd c WHERE c.status = :status ORDER BY c.createdAt DESC")
+    List<CarAd> findAllByStatusOrderByCreatedAtDesc(@Param("status") AdStatus status);
 
     // Hamma statusdagi e'lonlar, eng yangi birinchi
     List<CarAd> findAllByOrderByCreatedAtDesc();
+
 
 }
 

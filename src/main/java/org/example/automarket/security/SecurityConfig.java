@@ -67,7 +67,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/index.html",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "api/cars/active",
+                                "api/brands"
                         ).permitAll()
 
                         // 3. Auth va test/fayl yo'llari (sizning loyihangizga moslashtiring)

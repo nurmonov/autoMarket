@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -118,6 +119,23 @@ public class CarAdController {
             @PathVariable AdStatus status) {
 
         List<CarAdSummaryDto> cars = carAdService.getCarsByStatus(status);
+
+        return ResponseEntity.ok(cars);
+    }
+
+
+    @Operation(
+            summary = "Hozirda sotuvdagi barcha mashinalarni olish"
+
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Sotuvdagi mashinalar ro'yxati muvaffaqiyatli qaytarildi"),
+            @ApiResponse(responseCode = "401", description = "Autentifikatsiya talab qilinadi")
+    })
+    @GetMapping("/active")
+    public ResponseEntity<List<CarAdSummaryDto>> getActiveCars() {
+
+        List<CarAdSummaryDto> cars = carAdService.getAllActiveCars();
 
         return ResponseEntity.ok(cars);
     }

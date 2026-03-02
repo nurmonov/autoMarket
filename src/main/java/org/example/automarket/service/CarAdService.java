@@ -184,4 +184,13 @@ public class CarAdService {
                 .map(mapper::toCarAdSummaryDto)
                 .collect(Collectors.toList());
     }
+
+
+    public List<CarAdSummaryDto> getAllActiveCars() {
+        List<CarAd> cars = carAdRepository.findAllByStatusOrderByCreatedAtDesc(AdStatus.APPROVED);
+
+        return cars.stream()
+                .map(mapper::toCarAdSummaryDto)
+                .collect(Collectors.toList());
+    }
 }

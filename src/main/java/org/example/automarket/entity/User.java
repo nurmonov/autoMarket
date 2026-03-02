@@ -28,21 +28,21 @@ public class User implements UserDetails {  // Spring Security uchun UserDetails
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String phone;  // +998... asosiy identifier
+    private String phone;
 
     @Column(unique = true)
     private String email;
 
-    private String password;  // BCrypt encoded (Security da ishlatiladi)
+    private String password;
 
     private String fullName;
 
-    private String region;  // Toshkent, Samarqand...
+    private String region;
 
     private String city;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;  // Default USER
+    private Role role = Role.USER;
 
     @Builder.Default
     private boolean isActive = true;

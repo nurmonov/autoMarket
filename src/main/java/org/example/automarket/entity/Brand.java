@@ -19,9 +19,9 @@ public class Brand {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String name;  // Toyota, Chevrolet...
+    private String name;
 
-    private String logoUrl;  // Optional logo
+    private String logoUrl;
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL)
     private List<Model> models = new ArrayList<>();

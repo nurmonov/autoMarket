@@ -11,6 +11,7 @@ import org.example.automarket.repo.BrandRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class BrandService {
 
     private final BrandRepository brandRepository;
     private final AutoMarketMapper mapper;
+    private final FileStorageService fileStorageService;
 
     public List<BrandResponseDto> getAllBrands() {
         return mapper.toBrandResponseDtoList(brandRepository.findAll());
@@ -61,5 +63,28 @@ public class BrandService {
             throw new EntityNotFoundException("Brand topilmadi");
         }
         brandRepository.deleteById(id);
+    }
+
+    @Transactional
+    public BrandResponseDto updateBrandLogo(Long brandId, MultipartFile logoFile) {
+        Brand brand = brandRepository.findById(brandId)
+                .orElseThrow(() -> new EntityNotFoundException("Brend topilmadi: " + brandId));
+
+        if (logoFile == null || logoFile.isEmpty()) {
+            throw new IllegalArgumentException("Logo fayli yuklanmadi");
+        }
+
+        // Eski logo bor bo‘lsa o‘chirish
+        if (brand.getLogoUrl() != null) {
+            fileStorageService.delete(brand.getLogoUrl());
+        }
+
+        // Yangi logo saqlash (universal metod bilan)
+        String logoUrl = fileStorageService.store(logoFile, brandId, FileStorageService.EntityType.BRANDS);
+
+        brand.setLogoUrl(logoUrl);
+        brand = brandRepository.save(brand);
+
+        return mapper.toBrandResponseDto(brand);
     }
 }
