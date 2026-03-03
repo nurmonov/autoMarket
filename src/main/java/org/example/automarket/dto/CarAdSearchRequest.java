@@ -13,10 +13,10 @@ public class CarAdSearchRequest {
     private Integer maxYear;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    private String color;  // enum string
+    private String color;
     private String transmission;
     private String fuelType;
     private String bodyType;
     private String region;
-    // Qo'shimcha filtrlar qo'shsa bo'ladi: mileageMin, mileageMax va h.k.
+
 }

@@ -1,6 +1,9 @@
 package org.example.automarket.controller;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.automarket.dto.*;
@@ -27,7 +30,8 @@ public class UserController {
     private final UserService userService;
     private final AutoMarketMapper mapper;
 
-    // 1. Joriy foydalanuvchi ma'lumotlarini olish (GET ME)
+    @Operation(
+            summary = "Joriy foydalanuvchi malumotlarini olish (GET ME)")
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponseDto> getCurrentUser() {
@@ -35,7 +39,6 @@ public class UserController {
         return ResponseEntity.ok(userDto);
     }
 
-    // 2. Parolni o'zgartirish
     @PostMapping("/change-password")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> changePassword(@Valid @RequestBody PasswordChangeRequest request) {
@@ -43,7 +46,8 @@ public class UserController {
         return ResponseEntity.ok("Parol muvaffaqiyatli o'zgartirildi");
     }
 
-    // 3. Joriy foydalanuvchining statistikasi (e'lonlar soni, sotilganlar va h.k.)
+   @Operation(
+           summary = "Joriy foydalanuvchining statistikasi ")
     @GetMapping("/me/stats")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserStatsDto> getMyStats() {
@@ -51,7 +55,9 @@ public class UserController {
         return ResponseEntity.ok(stats);
     }
 
-    // 4. Joriy foydalanuvchining barcha e'lonlari (pagination bilan)
+    @Operation(
+            summary = "Joriy foydalanuvchining barcha elonlari (pagination bilan) "
+    )
     @GetMapping("/me/ads")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<CarAdSummaryDto>> getMyAds(
@@ -72,7 +78,9 @@ public class UserController {
         return ResponseEntity.ok(dtoPage);
     }
 
-    // 5. Joriy foydalanuvchining faqat sotilgan e'lonlari
+    @Operation(
+            summary = "test uchun  api  api/users/me/ads/{status} umumlashtirgan "
+    )
     @GetMapping("/me/ads/solding")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CarAdSummaryDto>> getMySoldAds() {
@@ -84,7 +92,9 @@ public class UserController {
         return ResponseEntity.ok(dtos);
     }
 
-    // 6. Joriy foydalanuvchining moderatsiyada kutayotgan e'lonlari
+    @Operation(
+            summary = "test uchun  api  api/users/me/ads/{status} umumlashtirgan "
+    )
     @GetMapping("/me/ads/pending")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CarAdSummaryDto>> getMyPendingAds() {
@@ -96,7 +106,8 @@ public class UserController {
         return ResponseEntity.ok(dtos);
     }
 
-    // 7. Admin uchun: barcha foydalanuvchilar ro'yxati (faqat ADMIN)
+ @Operation(
+         summary = "Admin uchun: barcha foydalanuvchilar royxati (faqat ADMIN)")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
@@ -104,14 +115,17 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    // 8. Admin uchun: bitta foydalanuvchi ma'lumotlarini olish (ID bo'yicha)
+    @Operation(
+            summary = "Admin uchun: bitta foydalanuvchi malumotlarini olish (ID bo'yicha)")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
         UserResponseDto userDto = userService.getUserById(id);
         return ResponseEntity.ok(userDto);
     }
-
+    @Operation(
+            summary = "test uchun  api  api/users/me/ads/{status} umumlashtirgan "
+    )
     @GetMapping("/me/ads/sold")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<CarAdSummaryDto>> getMySoldAds(
@@ -120,6 +134,43 @@ public class UserController {
 
         Page<CarAdSummaryDto> soldAds = userService.getMySoldAdsPaged(page, size);
         return ResponseEntity.ok(soldAds);
+    }
+
+    @Operation(
+            summary = "statuslar buyicha malumotlarni olish"
+    )
+    @GetMapping("/me/ads/{status}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<CarAdSummaryDto>> getMyAdsByStatus(
+            @Parameter(
+                    description = "Status qiymati (PENDING, APPROVED, SOLD)",
+                    required = true,
+                    example = "APPROVED",
+                    schema = @Schema(implementation = AdStatus.class)
+            )
+            @PathVariable AdStatus status,
+
+            @Parameter(description = "Sahifa raqami (0 dan)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Sahifadagi soni", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+
+            @Parameter(description = "Sort maydoni", example = "createdAt")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+
+            @Parameter(description = "Sort tartibi", example = "desc")
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(direction), sortBy)
+        );
+
+        Page<CarAdSummaryDto> myAds = userService.getMyAdsByStatus(status, pageable);
+
+        return ResponseEntity.ok(myAds);
     }
 
 }

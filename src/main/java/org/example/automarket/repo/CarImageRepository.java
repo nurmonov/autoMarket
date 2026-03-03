@@ -16,4 +16,5 @@ public interface CarImageRepository extends JpaRepository<CarImage, Long> {
     Optional<CarImage> findByCarAdIdAndIsMainTrue(Long carAdId);
 
     void deleteByCarAdId(Long carAdId);
+
 }

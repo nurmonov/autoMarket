@@ -2,6 +2,7 @@ package org.example.automarket.repo;
 
 // CarAdRepository.java (filtr va pagination uchun JpaSpecificationExecutor qo'shildi)
 import org.example.automarket.entity.CarAd;
+import org.example.automarket.entity.User;
 import org.example.automarket.entity.enums.AdStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,11 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
     // Hamma statusdagi e'lonlar, eng yangi birinchi
     List<CarAd> findAllByOrderByCreatedAtDesc();
 
+    Page<CarAd> findBySellerAndStatusOrderByCreatedAtDesc(
+            User seller,
+            AdStatus status,
+            Pageable pageable
+    );
 }
 
 

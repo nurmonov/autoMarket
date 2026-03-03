@@ -18,20 +18,14 @@ public class AuthController {
 
     private final AuthService authService;
 
-    /**
-     * Ro'yxatdan o'tish
-     * POST /api/v1/auth/register
-     */
+
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody UserRegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Kirish (login)
-     * POST /api/v1/auth/login
-     */
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);

@@ -21,5 +21,5 @@ public class FavoriteDto {
     private BigDecimal price;
     private String mainImageUrl;
     private String region;
-    private LocalDateTime addedAt;      // qachon yoqtirilgan
+    private LocalDateTime addedAt;
 }

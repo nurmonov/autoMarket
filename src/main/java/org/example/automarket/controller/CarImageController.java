@@ -23,15 +23,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/car-images")
+@RequestMapping("/api/car-images")
 @RequiredArgsConstructor
 public class CarImageController {
 
     private final CarImageService carImageService;
-    private final AutoMarketMapper mapper; // agar MapStruct ishlatayotgan bo'lsangiz
+    private final AutoMarketMapper mapper;
     private final CarImageRepository carImageRepository;
 
-    // 1. Rasm(larni) yuklash – oldingi versiya
+
     @PostMapping(value = "/car-ad/{carAdId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Rasmlar muvaffaqiyatli yuklandi"),
@@ -52,10 +52,10 @@ public class CarImageController {
             );
         }
 
-        // Rasmlarni yuklash
+
         List<String> urls = carImageService.uploadImages(carAdId, images);
 
-        // Qo‘lda mapping (MapStruct ishlamasa ham xato bermaydi)
+
         List<CarImage> savedImages = carImageRepository.findByCarAdIdOrderByOrderIndexAsc(carAdId);
 
         List<CarImageResponseDto> dtos = savedImages.stream()
@@ -82,12 +82,12 @@ public class CarImageController {
     public ResponseEntity<CarImageListResponse> getImages(@PathVariable Long carAdId) {
         List<CarImage> images = carImageRepository.findByCarAdIdOrderByOrderIndexAsc(carAdId);
 
-        // 🔥 Xavfsiz: agar mapper null bo‘lsa yoki metod ishlamasa, fallback
+
         List<CarImageResponseDto> dtos;
         try {
             dtos = mapper.toCarImageResponseDtoList(images);
         } catch (Exception e) {
-            // Agar MapStruct ishlamasa, qo‘lda mapping qilamiz (vaqtincha)
+
             dtos = images.stream().map(image -> CarImageResponseDto.builder()
                     .id(image.getId())
                     .carAdId(image.getCarAd().getId())
@@ -112,14 +112,14 @@ public class CarImageController {
 
         return ResponseEntity.ok(response);
     }
-    // 3. Bitta rasmni o'chirish (DELETE – DTO bilan javob)
+
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Rasm muvaffaqiyatli o'chirildi",
                     content = @Content(schema = @Schema(implementation = CarImageDeleteResponse.class))),
             @ApiResponse(responseCode = "404", description = "Rasm topilmadi")
     })
     @DeleteMapping("/{imageId}")
-    @PreAuthorize("isAuthenticated()") // yoki sotuvchi/admin tekshiruvi qo'shsa bo'ladi
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CarImageDeleteResponse> deleteImage(@PathVariable Long imageId) {
         carImageService.deleteImage(imageId);
 
@@ -132,7 +132,6 @@ public class CarImageController {
         return ResponseEntity.ok(response);
     }
 
-//    // 4. Bir nechta rasmni o'chirish (qo‘shimcha, agar kerak bo'lsa)
 //    @DeleteMapping("/bulk-delete")
 //    @PreAuthorize("isAuthenticated()")
 //    public ResponseEntity<CarImageDeleteResponse> deleteMultipleImages(

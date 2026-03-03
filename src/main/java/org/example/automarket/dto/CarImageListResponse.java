@@ -13,6 +13,6 @@ import java.util.List;
 public class CarImageListResponse {
     private Long carAdId;
     private int totalImages;
-    private String mainImageUrl; // asosiy rasm (agar bor bo'lsa)
+    private String mainImageUrl;
     private List<CarImageResponseDto> images;
 }

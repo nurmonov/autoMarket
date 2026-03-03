@@ -1,5 +1,6 @@
 package org.example.automarket.security;  // o'zingizning package'ingizga moslashtiring
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,6 +70,10 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "api/cars/active",
+                                "api/cars/approved",
+                                "api/cars/search",
+                                "api/cars/all/search",
+                                "api/models",
                                 "api/brands"
                         ).permitAll()
 
@@ -81,11 +86,18 @@ public class SecurityConfig {
                                 "/api/files/monitoring/**"
                         ).permitAll()
 
-                        // 4. Admin va boshqa cheklovlar (kerak bo'lsa qayta qo'shing)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // 5. Qolgan hamma narsa autentifikatsiya talab qiladi
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Token yoki login noto‘g‘ri");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("Ruxsat yo‘q");
+                })
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

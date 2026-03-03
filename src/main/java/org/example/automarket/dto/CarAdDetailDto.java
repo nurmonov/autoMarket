@@ -30,11 +30,11 @@ public class CarAdDetailDto {
     private String vin;
     private String stateNumber;
     private AdStatus status;
-    private List<String> imageUrls;      // barcha rasmlar (main birinchi bo'lishi mumkin)
-    private UserResponseDto seller;      // sotuvchi haqida minimal info
+    private List<String> imageUrls;
+    private UserResponseDto seller;
     private LocalDateTime createdAt;
     private LocalDateTime approvedAt;
     private boolean isFavorite;
 
-    // constructors...
+
 }

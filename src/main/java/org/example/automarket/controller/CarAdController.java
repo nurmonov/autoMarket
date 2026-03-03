@@ -23,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -41,17 +42,17 @@ public class CarAdController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<Page<CarAdSummaryDto>> search(
-            @ModelAttribute CarAdSearchRequest searchRequest,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
-        return ResponseEntity.ok(carAdService.searchCarAds(searchRequest, pageable));
-    }
+//    @GetMapping("/search")
+//    public ResponseEntity<Page<CarAdSummaryDto>> search(
+//            @ModelAttribute CarAdSearchRequest searchRequest,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(defaultValue = "createdAt") String sortBy,
+//            @RequestParam(defaultValue = "desc") String direction) {
+//
+//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
+//        return ResponseEntity.ok(carAdService.searchCarAds(searchRequest, pageable));
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<CarAdDetailDto> getDetail(@PathVariable Long id) {
@@ -92,12 +93,8 @@ public class CarAdController {
     }
 
 
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tanlangan statusdagi mashinalar ro'yxati"),
-            @ApiResponse(responseCode = "400", description = "Noto'g'ri status kiritildi"),
-            @ApiResponse(responseCode = "403", description = "Faqat ADMIN roli uchun")
-    })
-    @GetMapping("/by-status/{status}")
+
+    @GetMapping("/admin/by-status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CarAdSummaryDto>> getCarsByStatus(
             @Parameter(
@@ -106,9 +103,7 @@ public class CarAdController {
                     schema = @Schema(implementation = AdStatus.class)
             )
             @PathVariable AdStatus status) {
-
         List<CarAdSummaryDto> cars = carAdService.getCarsByStatus(status);
-
         return ResponseEntity.ok(cars);
     }
 
@@ -120,9 +115,10 @@ public class CarAdController {
     public ResponseEntity<List<CarAdSummaryDto>> getActiveCars() {
 
         List<CarAdSummaryDto> cars = carAdService.getAllActiveCars();
-
         return ResponseEntity.ok(cars);
     }
+
+
 
     @Operation(
             summary = "Sotuvdagilarni olish pagenation bilan "
@@ -146,6 +142,74 @@ public class CarAdController {
 
 
         Page<CarAdSummaryDto> result = carAdService.getApprovedCars(pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(
+            summary = "Mashina qidirish (search)",
+            description = "Barcha tasdiqlangan mashinalar orasidan qidiruv. " +
+                    "Barcha parametrlar query string orqali keladi. " +
+                    "Agar parametr yuborilmasa — filtr qo'llanilmaydi."
+    )
+
+    @GetMapping("/all/search")
+    public ResponseEntity<Page<CarAdSummaryDto>> searchCars(
+
+            @Parameter(description = "Brend ID", example = "1")
+            @RequestParam(required = false) Long brandId,
+
+            @Parameter(description = "Model ID", example = "5")
+            @RequestParam(required = false) Long modelId,
+
+
+            @Parameter(description = "Minimal narx", example = "10000000")
+            @RequestParam(required = false) BigDecimal minPrice,
+
+            @Parameter(description = "Maksimal narx", example = "50000000")
+            @RequestParam(required = false) BigDecimal maxPrice,
+
+
+            @Parameter(description = "Minimal yil", example = "2015")
+            @RequestParam(required = false) Integer minYear,
+
+            @Parameter(description = "Maksimal yil", example = "2025")
+            @RequestParam(required = false) Integer maxYear,
+
+
+            @Parameter(description = "Rang (enum OQ, QORA, KULRANG, KUMUSH, QIZIL, KO_K, JIGARRANG)", example = "QORA")
+            @RequestParam(required = false) String color,
+
+            @Parameter(description = "Transmission (enum   AVTOMAT, MEXANIKA, CVT, ROBOTIC)", example = "AVTOMAT")
+            @RequestParam(required = false) String transmission,
+
+            @Parameter(description = "Fuel Type (enum   PETROL, DIESEL, GAS, ELECTRIC, HYBRID)", example = "PETROL")
+            @RequestParam(required = false) String fuelType,
+
+
+            @Parameter(description = "Sahifa raqami (0 dan boshlanadi)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Sahifadagi elementlar soni", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+
+            @Parameter(description = "Sort maydoni (price, year, mileage, createdAt)", example = "createdAt")
+            @RequestParam(required = false) String sortBy,
+
+            @Parameter(description = "Sort tartibi (asc yoki desc)", example = "desc")
+            @RequestParam(required = false) String direction) {
+
+
+        Sort sort = sortBy != null && !sortBy.isBlank()
+                ? Sort.by(Sort.Direction.fromString(direction != null ? direction : "desc"), sortBy)
+                : Sort.by("createdAt").descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+
+        Page<CarAdSummaryDto> result = carAdService.searchApprovedCars(
+                brandId, modelId, minPrice, maxPrice, minYear, maxYear,
+                color, transmission, fuelType, pageable
+        );
 
         return ResponseEntity.ok(result);
     }

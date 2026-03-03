@@ -135,4 +135,21 @@ public class UserService {
         return userRepository.findByPhone(phone)
                 .orElseThrow(() -> new UsernameNotFoundException("Foydalanuvchi topilmadi"));
     }
+
+    @Transactional(readOnly = true)
+    public Page<CarAdSummaryDto> getMyAdsByStatus(AdStatus status, Pageable pageable) {
+        User currentUser = getCurrentUser();  // SecurityContext dan olish
+
+        if (status == null) {
+            throw new IllegalArgumentException("Status qiymati bo'sh bo'lishi mumkin emas");
+        }
+
+        Page<CarAd> page = carAdRepository.findBySellerAndStatusOrderByCreatedAtDesc(
+                currentUser,
+                status,
+                pageable
+        );
+
+        return page.map(mapper::toCarAdSummaryDto);
+    }
 }

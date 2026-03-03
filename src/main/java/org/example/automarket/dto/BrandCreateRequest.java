@@ -16,5 +16,5 @@ public class BrandCreateRequest {
 
 
     private String name;
-    private String logoUrl;  // optional
+    private String logoUrl;
 }

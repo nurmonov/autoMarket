@@ -1,4 +1,3 @@
-// JwtUtil - NPE ni oldini olish uchun extractAllClaims da null check qo'ydim
 package org.example.automarket.security;
 
 import io.jsonwebtoken.Claims;

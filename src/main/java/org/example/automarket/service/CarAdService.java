@@ -14,6 +14,7 @@ import org.example.automarket.repo.CarAdRepository;
 import org.example.automarket.repo.ModelRepository;
 import org.example.automarket.repo.UserRepository;
 import org.example.automarket.specification.CarAdSpecification;
+import org.example.automarket.specification.CarAdSpecification1;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,6 +141,7 @@ public class CarAdService {
         dto.setFavorite(favoriteService.isFavorite(carAd.getId()));
         return dto;
     }
+
     @Transactional(readOnly = true)
     public Page<CarAdSummaryDto> searchCarAds(CarAdSearchRequest request, Pageable pageable) {
         Specification<CarAd> spec = CarAdSpecification.search(request)
@@ -153,7 +156,10 @@ public class CarAdService {
             return dto;
         });
     }
-    // CarAdService.java
+
+
+
+
     @Transactional(readOnly = true)
     public List<CarAdSummaryDto> getAllApprovedCars() {
         // Repo dan faqat tasdiqlanganlarni, eng yangi birinchi olamiz
@@ -200,5 +206,48 @@ public class CarAdService {
         Page<CarAd> page = carAdRepository.findAllByStatus(AdStatus.APPROVED, pageable);
 
         return page.map(carAd -> mapper.toCarAdSummaryDto(carAd));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CarAdSummaryDto> searchApprovedCars(
+            Long brandId, Long modelId, BigDecimal minPrice, BigDecimal maxPrice,
+            Integer minYear, Integer maxYear,
+            String color, String transmission, String fuelType,
+            Pageable pageable) {
+
+        // Specification orqali dinamik filtr
+        Specification<CarAd> spec = Specification.where(CarAdSpecification1.hasStatus(AdStatus.APPROVED));
+
+        if (brandId != null) {
+            spec = spec.and(CarAdSpecification1.hasBrand(brandId));
+        }
+        if (modelId != null) {
+            spec = spec.and(CarAdSpecification1.hasModel(modelId));
+        }
+        if (minPrice != null) {
+            spec = spec.and(CarAdSpecification1.priceGreaterThanEqual(minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and(CarAdSpecification1.priceLessThanEqual(maxPrice));
+        }
+        if (minYear != null) {
+            spec = spec.and(CarAdSpecification1.yearGreaterThanEqual(minYear));
+        }
+        if (maxYear != null) {
+            spec = spec.and(CarAdSpecification1.yearLessThanEqual(maxYear));
+        }
+        if (color != null && !color.isBlank()) {
+            spec = spec.and(CarAdSpecification1.hasColor(color));
+        }
+        if (transmission != null && !transmission.isBlank()) {
+            spec = spec.and(CarAdSpecification1.hasTransmission(transmission));
+        }
+        if (fuelType != null && !fuelType.isBlank()) {
+            spec = spec.and(CarAdSpecification1.hasFuelType(fuelType));
+        }
+
+        Page<CarAd> page = carAdRepository.findAll(spec, pageable);
+
+        return page.map(mapper::toCarAdSummaryDto);
     }
 }
