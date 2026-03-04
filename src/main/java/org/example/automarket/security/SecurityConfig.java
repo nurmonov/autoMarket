@@ -72,12 +72,12 @@ public class SecurityConfig {
                                 "api/cars/active",
                                 "api/cars/approved",
                                 "api/cars/search",
-                                "api/cars/all/search",
+                                "api/cars/all/**",
                                 "api/models",
-                                "api/brands"
+                                "api/brands",
+                                "api/models/brand/**"
                         ).permitAll()
 
-                        // 3. Auth va test/fayl yo'llari (sizning loyihangizga moslashtiring)
                         .requestMatchers("/api/auth/**",
                                 "/api/files/upload-multiple/**",
                                 "/api/files/download/**",

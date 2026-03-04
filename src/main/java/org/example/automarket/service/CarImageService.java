@@ -100,9 +100,7 @@ public class CarImageService {
     }
 
 
-    /**
-     * Bitta rasmni o'chirish
-     */
+
     @Transactional
     public void deleteImage(Long imageId) {
         CarImage image = carImageRepository.findById(imageId)
@@ -117,9 +115,7 @@ public class CarImageService {
 
 
 
-    /**
-     * E'lon bo'yicha asosiy rasmni qaytarish (agar kerak bo'lsa)
-     */
+
     @Transactional(readOnly = true)
     public String getMainImage(Long carAdId) {
         return carImageRepository.findByCarAdIdAndIsMainTrue(carAdId)
