@@ -1,4 +1,3 @@
-// CustomUserDetailsService - phone bilan qidirishga o'zgartirdim (email emas)
 package org.example.automarket.security;
 
 import org.example.automarket.repo.UserRepository;
@@ -18,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByPhone(username)  // 🔥 Phone bilan qidirish
+        return userRepository.findByPhone(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Foydalanuvchi topilmadi: " + username));
     }
 }

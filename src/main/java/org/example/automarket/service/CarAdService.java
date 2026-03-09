@@ -73,7 +73,7 @@ public class CarAdService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "E'lon topilmadi"));
 
         CarAdDetailDto dto = mapper.toCarAdDetailDto(carAd);
-        dto.setFavorite(favoriteService.isFavorite(id));  // joriy user uchun
+       // dto.setFavorite(favoriteService.isFavorite(id));  // joriy user uchun
         return dto;
     }
 

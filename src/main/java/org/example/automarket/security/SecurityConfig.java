@@ -1,4 +1,5 @@
-package org.example.automarket.security;  // o'zingizning package'ingizga moslashtiring
+package org.example.automarket.security;
+
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +36,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("*"));                     // test uchun * — keyin aniq domainlarga o'zgartirsa bo'ladi
-        config.setAllowedMethods(List.of("*"));                     // OPTIONS, GET, POST, PUT, DELETE, PATCH hammasi
+        config.setAllowedOrigins(List.of("*"));
+        config.setAllowedMethods(List.of("*"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(false);                          // * bilan true bo'lmaydi
@@ -50,17 +51,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))  // CORS ni albatta ulaymiz
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Preflight OPTIONS so'rovlari uchun – eng muhim!
+
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 2. Swagger / OpenAPI yo'llari – to'liq ochiq (springdoc uchun)
+
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/v3/api-docs",
@@ -74,10 +75,11 @@ public class SecurityConfig {
                                 "api/cars/search",
                                 "api/cars/all/**",
                                 "api/models",
-                                "api/brands",
-                                "api/models/brand/**"
+                                "/api/brands",
+                                "/api/models/brand/**"
+                            //    "/api/cars/get/**"
                         ).permitAll()
-
+                        .requestMatchers("/api/cars/get/{id}").permitAll()
                         .requestMatchers("/api/auth/**",
                                 "/api/files/upload-multiple/**",
                                 "/api/files/download/**",

@@ -10,6 +10,7 @@ import org.example.automarket.mapper.AutoMarketMapper;
 import org.example.automarket.repo.CarAdRepository;
 import org.example.automarket.repo.FavoriteRepository;
 import org.example.automarket.repo.UserRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -61,9 +62,23 @@ public class FavoriteService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isFavorite(Long carAdId) {
-        User currentUser = getCurrentUser();
-        return favoriteRepository.existsByUserIdAndCarAdId(currentUser.getId(), carAdId);
+    public boolean isFavorite(Long carId) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            return false;
+        }
+
+        String username = authentication.getName();
+        User user = userRepository.findByEmail(username).orElse(null);
+
+        if (user == null) {
+            return false;
+        }
+
+        return favoriteRepository.existsByIdUserIdAndIdCarAdId(user.getId(), carId);
     }
 
     private User getCurrentUser() {

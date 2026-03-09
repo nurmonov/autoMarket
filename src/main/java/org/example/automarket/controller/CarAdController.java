@@ -38,23 +38,12 @@ public class CarAdController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
     public ResponseEntity<CarAdDetailDto> create(@Valid @RequestBody CarAdCreateRequest request) {
-        CarAdDetailDto dto = carAdService.createCarAd(request, List.of());  // rasmlarsiz yaratamiz
+        CarAdDetailDto dto = carAdService.createCarAd(request, List.of());
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-//    @GetMapping("/search")
-//    public ResponseEntity<Page<CarAdSummaryDto>> search(
-//            @ModelAttribute CarAdSearchRequest searchRequest,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            @RequestParam(defaultValue = "createdAt") String sortBy,
-//            @RequestParam(defaultValue = "desc") String direction) {
-//
-//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
-//        return ResponseEntity.ok(carAdService.searchCarAds(searchRequest, pageable));
-//    }
 
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     public ResponseEntity<CarAdDetailDto> getDetail(@PathVariable Long id) {
         return ResponseEntity.ok(carAdService.getCarAdDetail(id));
     }

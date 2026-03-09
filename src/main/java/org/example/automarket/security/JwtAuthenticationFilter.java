@@ -1,4 +1,3 @@
-// JwtAuthenticationFilter - NPE va boshqa xatolarni to'g'riladim
 package org.example.automarket.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
@@ -96,10 +95,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+
         String path = request.getServletPath();
         String method = request.getMethod();
 
-        // OPTIONS ni umuman filtrlamaymiz
         if ("OPTIONS".equals(method)) {
             return true;
         }
@@ -109,6 +108,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/swagger-ui.html")
                 || path.equals("/swagger-ui/index.html")
                 || path.startsWith("/api/auth/")
-                || path.startsWith("/webjars/");
+                || path.startsWith("/webjars/")
+                || path.startsWith("/api/cars/get/**")   // 🔥 MUAMMO SHU
+                || path.startsWith("/api/cars/approved")
+                || path.startsWith("/api/cars/active")
+                || path.startsWith("/api/cars/search")
+                || path.startsWith("/api/cars/all/")
+                || path.startsWith("/api/models")
+                || path.startsWith("/api/brands")
+                || path.startsWith("/api/models/brand/");
     }
 }
