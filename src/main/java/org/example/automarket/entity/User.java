@@ -53,15 +53,15 @@ public class User implements UserDetails {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    // UserDetails methods (Spring Security uchun)
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));  // ROLE_USER, ROLE_ADMIN...
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
     public String getUsername() {
-        return phone;  // Phone ni username sifatida ishlatamiz
+        return phone;  
     }
 
     @Override
