@@ -138,7 +138,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<CarAdSummaryDto> getMyAdsByStatus(AdStatus status, Pageable pageable) {
-        User currentUser = getCurrentUser();  // SecurityContext dan olish
+        User currentUser = getCurrentUser();
 
         if (status == null) {
             throw new IllegalArgumentException("Status qiymati bo'sh bo'lishi mumkin emas");

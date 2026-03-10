@@ -134,22 +134,15 @@ public class CarAdController {
         return ResponseEntity.ok(result);
     }
 
-    @Operation(
-            summary = "Mashina qidirish (search)",
-            description = "Barcha tasdiqlangan mashinalar orasidan qidiruv. " +
-                    "Barcha parametrlar query string orqali keladi. " +
-                    "Agar parametr yuborilmasa — filtr qo'llanilmaydi."
-    )
 
     @GetMapping("/all/search")
     public ResponseEntity<Page<CarAdSummaryDto>> searchCars(
+            // Brand va Model endi List<Long> bo‘ladi
+            @Parameter(description = "Brend ID lar (bir nechta: 1,3,5)")
+            @RequestParam(required = false) List<Long> brands,
 
-            @Parameter(description = "Brend ID", example = "1")
-            @RequestParam(required = false) Long brandId,
-
-            @Parameter(description = "Model ID", example = "5")
-            @RequestParam(required = false) Long modelId,
-
+            @Parameter(description = "Model ID lar (bir nechta: 7,8,10)")
+            @RequestParam(required = false) List<Long> models,
 
             @Parameter(description = "Minimal narx", example = "10000000")
             @RequestParam(required = false) BigDecimal minPrice,
@@ -157,38 +150,35 @@ public class CarAdController {
             @Parameter(description = "Maksimal narx", example = "50000000")
             @RequestParam(required = false) BigDecimal maxPrice,
 
-
             @Parameter(description = "Minimal yil", example = "2015")
             @RequestParam(required = false) Integer minYear,
 
             @Parameter(description = "Maksimal yil", example = "2025")
             @RequestParam(required = false) Integer maxYear,
 
+            @Parameter(description = "Rang (bir nechta:OQ, QORA, KULRANG, KUMUSH, QIZIL, KO_K, JIGARRANG)")
+            @RequestParam(required = false) List<String> color,
 
-            @Parameter(description = "Rang (enum OQ, QORA, KULRANG, KUMUSH, QIZIL, KO_K, JIGARRANG)", example = "QORA")
-            @RequestParam(required = false) String color,
+            @Parameter(description = "Transmission (bir nechta:   AVTOMAT, MEXANIKA, CVT, ROBOTIC)")
+            @RequestParam(required = false) List<String> transmission,
 
-            @Parameter(description = "Transmission (enum   AVTOMAT, MEXANIKA, CVT, ROBOTIC)", example = "AVTOMAT")
-            @RequestParam(required = false) String transmission,
+            @Parameter(description = "Fuel Type (bir nechta:PETROL, DIESEL, GAS, ELECTRIC, HYBRID )")
+            @RequestParam(required = false) List<String> fuelType,
 
-            @Parameter(description = "Fuel Type (enum   PETROL, DIESEL, GAS, ELECTRIC, HYBRID)", example = "PETROL")
-            @RequestParam(required = false) String fuelType,
-
-
-            @Parameter(description = "Sahifa raqami (0 dan boshlanadi)", example = "0")
+            @Parameter(description = "Sahifa raqami (0 dan)", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
-            @Parameter(description = "Sahifadagi elementlar soni", example = "10")
+            @Parameter(description = "Sahifadagi soni", example = "10")
             @RequestParam(defaultValue = "10") int size,
 
             @Parameter(description = "Sort maydoni (price, year, mileage, createdAt)", example = "createdAt")
             @RequestParam(required = false) String sortBy,
 
-            @Parameter(description = "Sort tartibi (asc yoki desc)", example = "desc")
+            @Parameter(description = "Sort tartibi (asc/desc)", example = "desc")
             @RequestParam(required = false) String direction) {
 
 
-        Sort sort = sortBy != null && !sortBy.isBlank()
+        Sort sort = (sortBy != null && !sortBy.isBlank())
                 ? Sort.by(Sort.Direction.fromString(direction != null ? direction : "desc"), sortBy)
                 : Sort.by("createdAt").descending();
 
@@ -196,10 +186,74 @@ public class CarAdController {
 
 
         Page<CarAdSummaryDto> result = carAdService.searchApprovedCars(
-                brandId, modelId, minPrice, maxPrice, minYear, maxYear,
+                brands, models, minPrice, maxPrice, minYear, maxYear,
                 color, transmission, fuelType, pageable
         );
 
         return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "Mashina qidirish")
+    @GetMapping("/search")
+    public ResponseEntity<Page<CarAdSummaryDto>> searchCars(
+            @Parameter(description = "Qidiruv so'zi (brand, model, tavsif)")
+            @RequestParam(required = false) String keyword,
+
+
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(direction), sortBy)
+        );
+
+        Page<CarAdSummaryDto> result;
+
+
+            result = carAdService.searchByKeyword(keyword.trim(), pageable);
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{userId}/ads/{status}")
+    public ResponseEntity<Page<CarAdSummaryDto>> getUserAdsByStatus(
+            @Parameter(description = "User ID si (admin kiritadi)", required = true)
+            @PathVariable Long userId,
+
+            @Parameter(
+                    description = "Status qiymati (PENDING, APPROVED, SOLD va h.k.)",
+                    required = true,
+                    example = "APPROVED",
+                    schema = @Schema(implementation = AdStatus.class)
+            )
+            @PathVariable AdStatus status,
+
+            @Parameter(description = "Sahifa raqami (0 dan)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Sahifadagi e'lonlar soni", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+
+            @Parameter(description = "Sort maydoni", example = "createdAt")
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+
+            @Parameter(description = "Sort tartibi", example = "desc")
+            @RequestParam(defaultValue = "desc") String direction) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.fromString(direction), sortBy)
+        );
+
+        // Service chaqiruvi — userId ni parametr sifatida beramiz
+        Page<CarAdSummaryDto> userAds = carAdService.getUserAdsByStatus(userId, status, pageable);
+
+        return ResponseEntity.ok(userAds);
     }
 }

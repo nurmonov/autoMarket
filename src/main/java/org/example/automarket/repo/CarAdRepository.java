@@ -51,6 +51,28 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
             AdStatus status,
             Pageable pageable
     );
+
+
+    @Query("""
+        SELECT c FROM CarAd c 
+        WHERE LOWER(c.model.brand.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(c.model.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        ORDER BY c.createdAt DESC
+    """)
+    Page<CarAd> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    // 2. Brand va Model ID lar bo'yicha filtr
+    @Query("""
+        SELECT c FROM CarAd c 
+        WHERE (:brands IS NULL OR c.model.brand.id IN :brands)
+          AND (:models IS NULL OR c.model.id IN :models)
+        ORDER BY c.createdAt DESC
+    """)
+    Page<CarAd> searchByBrandsAndModels(
+            @Param("brands") List<Long> brands,
+            @Param("models") List<Long> models,
+            Pageable pageable);
 }
 
 

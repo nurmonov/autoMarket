@@ -89,9 +89,6 @@ public class CarAdService {
         mapper.updateCarAdFromRequest(request, carAd);
         carAd.setUpdatedAt(LocalDateTime.now());
 
-//        if (!newImages.isEmpty()) {
-//            carImageService.uploadImages(id, newImages);
-//        }
 
         return mapper.toCarAdDetailDto(carAdRepository.save(carAd));
     }
@@ -119,7 +116,7 @@ public class CarAdService {
             carAd.setApprovedAt(LocalDateTime.now());
         } else {
             carAd.setStatus(AdStatus.REJECTED);
-            // rejectReason ni saqlash uchun qo'shimcha field qo'shsa bo'ladi
+
         }
 
         carAdRepository.save(carAd);
@@ -151,8 +148,7 @@ public class CarAdService {
 
         return page.map(carAd -> {
             CarAdSummaryDto dto = mapper.toCarAdSummaryDto(carAd);
-            // Agar joriy user uchun isFavorite kerak bo‘lsa qo‘shsa bo‘ladi
-            // dto.setIsFavorite(favoriteService.isFavorite(carAd.getId()));
+
             return dto;
         });
     }
@@ -162,10 +158,10 @@ public class CarAdService {
 
     @Transactional(readOnly = true)
     public List<CarAdSummaryDto> getAllApprovedCars() {
-        // Repo dan faqat tasdiqlanganlarni, eng yangi birinchi olamiz
+
         List<CarAd> cars = carAdRepository.findAllByStatusOrderByCreatedAtDesc(AdStatus.APPROVED);
 
-        // DTO ga aylantiramiz
+        
         return cars.stream()
                 .map(mapper::toCarAdSummaryDto)
                 .collect(Collectors.toList());
@@ -208,22 +204,91 @@ public class CarAdService {
         return page.map(carAd -> mapper.toCarAdSummaryDto(carAd));
     }
 
+//    @Transactional(readOnly = true)
+//    public Page<CarAdSummaryDto> searchApprovedCars(
+//            Long brandId, Long modelId, BigDecimal minPrice, BigDecimal maxPrice,
+//            Integer minYear, Integer maxYear,
+//            String color, String transmission, String fuelType,
+//            Pageable pageable) {
+//
+//
+//        Specification<CarAd> spec = Specification.where(CarAdSpecification1.hasStatus(AdStatus.APPROVED));
+//
+//        if (brandId != null) {
+//            spec = spec.and(CarAdSpecification1.hasBrand(brandId));
+//        }
+//        if (modelId != null) {
+//            spec = spec.and(CarAdSpecification1.hasModel(modelId));
+//        }
+//        if (minPrice != null) {
+//            spec = spec.and(CarAdSpecification1.priceGreaterThanEqual(minPrice));
+//        }
+//        if (maxPrice != null) {
+//            spec = spec.and(CarAdSpecification1.priceLessThanEqual(maxPrice));
+//        }
+//        if (minYear != null) {
+//            spec = spec.and(CarAdSpecification1.yearGreaterThanEqual(minYear));
+//        }
+//        if (maxYear != null) {
+//            spec = spec.and(CarAdSpecification1.yearLessThanEqual(maxYear));
+//        }
+//        if (color != null && !color.isBlank()) {
+//            spec = spec.and(CarAdSpecification1.hasColor(color));
+//        }
+//        if (transmission != null && !transmission.isBlank()) {
+//            spec = spec.and(CarAdSpecification1.hasTransmission(transmission));
+//        }
+//        if (fuelType != null && !fuelType.isBlank()) {
+//            spec = spec.and(CarAdSpecification1.hasFuelType(fuelType));
+//        }
+//
+//        Page<CarAd> page = carAdRepository.findAll(spec, pageable);
+//
+//        return page.map(mapper::toCarAdSummaryDto);
+//    }
+
+    public Page<CarAdSummaryDto> searchByKeyword(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Page.empty(pageable);
+        }
+        Page<CarAd> page = carAdRepository.searchByKeyword(keyword.trim(), pageable);
+        return page.map(mapper::toCarAdSummaryDto);
+    }
+
+
+    public Page<CarAdSummaryDto> searchByBrandsAndModels(
+            List<Long> brands, List<Long> models, Pageable pageable) {
+
+        Page<CarAd> page = carAdRepository.searchByBrandsAndModels(brands, models, pageable);
+        return page.map(mapper::toCarAdSummaryDto);
+    }
+
     @Transactional(readOnly = true)
     public Page<CarAdSummaryDto> searchApprovedCars(
-            Long brandId, Long modelId, BigDecimal minPrice, BigDecimal maxPrice,
+            List<Long> brands,
+            List<Long> models,
+            BigDecimal minPrice, BigDecimal maxPrice,
             Integer minYear, Integer maxYear,
-            String color, String transmission, String fuelType,
+            List<String> colors,
+            List<String> transmissions,
+            List<String> fuelTypes,
             Pageable pageable) {
 
-        // Specification orqali dinamik filtr
-        Specification<CarAd> spec = Specification.where(CarAdSpecification1.hasStatus(AdStatus.APPROVED));
 
-        if (brandId != null) {
-            spec = spec.and(CarAdSpecification1.hasBrand(brandId));
+        Specification<CarAd> spec = Specification.where(
+                CarAdSpecification1.hasStatus(AdStatus.APPROVED)
+        );
+
+
+        if (brands != null && !brands.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("model").get("brand").get("id").in(brands));
         }
-        if (modelId != null) {
-            spec = spec.and(CarAdSpecification1.hasModel(modelId));
+
+
+        if (models != null && !models.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("model").get("id").in(models));
         }
+
         if (minPrice != null) {
             spec = spec.and(CarAdSpecification1.priceGreaterThanEqual(minPrice));
         }
@@ -236,18 +301,43 @@ public class CarAdService {
         if (maxYear != null) {
             spec = spec.and(CarAdSpecification1.yearLessThanEqual(maxYear));
         }
-        if (color != null && !color.isBlank()) {
-            spec = spec.and(CarAdSpecification1.hasColor(color));
+
+
+        if (colors != null && !colors.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("color").in(colors));
         }
-        if (transmission != null && !transmission.isBlank()) {
-            spec = spec.and(CarAdSpecification1.hasTransmission(transmission));
+
+        if (transmissions != null && !transmissions.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("transmission").in(transmissions));
         }
-        if (fuelType != null && !fuelType.isBlank()) {
-            spec = spec.and(CarAdSpecification1.hasFuelType(fuelType));
+
+
+        if (fuelTypes != null && !fuelTypes.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("fuelType").in(fuelTypes));
         }
 
         Page<CarAd> page = carAdRepository.findAll(spec, pageable);
+        return page.map(mapper::toCarAdSummaryDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CarAdSummaryDto> getUserAdsByStatus(Long userId, AdStatus status, Pageable pageable) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status qiymati bo'sh bo'lishi mumkin emas");
+        }
+
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User topilmadi: ID = " + userId));
+
+
+        Page<CarAd> page = carAdRepository.findBySellerAndStatusOrderByCreatedAtDesc(
+                user,
+                status,
+                pageable
+        );
 
         return page.map(mapper::toCarAdSummaryDto);
     }
+
 }
