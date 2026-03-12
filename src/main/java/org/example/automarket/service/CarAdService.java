@@ -4,11 +4,10 @@ package org.example.automarket.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.automarket.dto.*;
-import org.example.automarket.entity.enums.AdStatus;
+import org.example.automarket.entity.enums.*;
 import org.example.automarket.entity.CarAd;
 import org.example.automarket.entity.Model;
 import org.example.automarket.entity.User;
-import org.example.automarket.entity.enums.Role;
 import org.example.automarket.mapper.AutoMarketMapper;
 import org.example.automarket.repo.CarAdRepository;
 import org.example.automarket.repo.ModelRepository;
@@ -78,7 +77,8 @@ public class CarAdService {
     }
 
     @Transactional
-    public CarAdDetailDto updateCarAd(Long id, CarAdUpdateRequest request, List<MultipartFile> newImages) {
+    public CarAdDetailDto updateCarAd(Long id, CarAdUpdateRequest request) {
+
         CarAd carAd = carAdRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "E'lon topilmadi"));
 
@@ -86,11 +86,53 @@ public class CarAdService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Siz bu e'lonni tahrirlay olmaysiz");
         }
 
-        mapper.updateCarAdFromRequest(request, carAd);
+        if (request.getYear() != null) {
+            carAd.setYear(request.getYear());
+        }
+
+        if (request.getPrice() != null) {
+            carAd.setPrice(request.getPrice());
+        }
+
+        if (request.getMileage() != null) {
+            carAd.setMileage(request.getMileage());
+        }
+
+        if (request.getColor() != null) {
+            carAd.setColor(Color.valueOf(request.getColor()));
+        }
+
+        if (request.getTransmission() != null) {
+            carAd.setTransmission(Transmission.from(request.getTransmission()));
+        }
+
+        if (request.getFuelType() != null) {
+            carAd.setFuelType(FuelType.valueOf(request.getFuelType()));
+        }
+
+        if (request.getBodyType() != null) {
+            carAd.setBodyType(BodyType.valueOf(request.getBodyType()));
+        }
+
+        if (request.getDescription() != null) {
+            carAd.setDescription(request.getDescription());
+        }
+
+        if (request.getVin() != null) {
+            carAd.setVin(request.getVin());
+        }
+
+        if (request.getStateNumber() != null) {
+            carAd.setStateNumber(request.getStateNumber());
+        }
+
         carAd.setUpdatedAt(LocalDateTime.now());
 
 
-        return mapper.toCarAdDetailDto(carAdRepository.save(carAd));
+
+        CarAd savedCarAd = carAdRepository.save(carAd);
+
+        return mapper.toCarAdDetailDto(savedCarAd);
     }
 
     @Transactional
@@ -339,5 +381,8 @@ public class CarAdService {
 
         return page.map(mapper::toCarAdSummaryDto);
     }
+
+
+
 
 }

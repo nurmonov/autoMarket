@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ModerateCarAdRequest {
-    private Long carAdId;
     private boolean approve;
     private String rejectReason;
 }

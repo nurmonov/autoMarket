@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -73,6 +74,55 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
             @Param("brands") List<Long> brands,
             @Param("models") List<Long> models,
             Pageable pageable);
+
+    long countByStatus(AdStatus status);
+
+    @Query("SELECT COUNT(c) FROM CarAd c WHERE c.createdAt >= :start AND c.createdAt <= :end")
+    long countByDateRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(c) FROM CarAd c WHERE c.createdAt >= :start AND c.createdAt <= :end AND c.status = :status")
+    long countByDateRangeAndStatus(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, @Param("status") AdStatus status);
+
+    @Query("SELECT AVG(c.price) FROM CarAd c WHERE c.status = :status")
+    Double findAveragePriceByStatus(@Param("status") AdStatus status);
+
+
+
+
+      @Query("""
+          SELECT AVG(c.price)
+           FROM CarAd c
+           WHERE (:startDate IS NULL OR c.createdAt >= :startDate)
+         AND (:endDate IS NULL OR c.createdAt <= :endDate)
+          AND c.status = :status
+           """)
+      Double findAveragePriceByStatusAndDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("status") AdStatus status
+    );
+
+    @Query(value = """
+           SELECT 
+
+          COUNT(*) as total_ads,
+
+           COUNT(*) FILTER (WHERE status='APPROVED') as approved,
+           COUNT(*) FILTER (WHERE status='PENDING') as pending,
+           COUNT(*) FILTER (WHERE status='REJECTED') as rejected,
+           COUNT(*) FILTER (WHERE status='SOLD') as sold,
+
+          AVG(price) FILTER (WHERE status='APPROVED') as avg_price,
+
+           COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE) as today_ads,
+
+           COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '7 day') as last_week_ads,
+
+             COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '30 day') as last_month_ads
+
+           FROM car_ads
+          """, nativeQuery = true)
+      Object[] getFullAdminStats();
 }
 
 
