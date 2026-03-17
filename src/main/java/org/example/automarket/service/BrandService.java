@@ -35,13 +35,46 @@ public class BrandService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
-    public BrandResponseDto createBrand(BrandCreateRequest request) {
+    public BrandResponseDto createBrand(String name, MultipartFile logoFile) {
+        // 1. Unique nomni tekshirish (DB xatosi chiqmasligi uchun)
+        if (brandRepository.existsByName(name)) {
+            throw new IllegalArgumentException("Bunday nomdagi brend allaqachon mavjud: " + name);
+        }
+
+        // 2. Yangi brand yaratish
         Brand brand = Brand.builder()
-                .name(request.getName())
-                .logoUrl(request.getLogoUrl())
+                .name(name)
                 .build();
-        return mapper.toBrandResponseDto(brandRepository.save(brand));
+
+        // 3. Saqlash (ID generatsiya qilinadi)
+        brand = brandRepository.save(brand);
+
+        // 4. Logo yuklash (agar yuborilgan bo‘lsa)
+        if (logoFile != null && !logoFile.isEmpty()) {
+            // Fayl hajmi cheklash (masalan 5MB)
+            if (logoFile.getSize() > 5 * 1024 * 1024) {
+                throw new IllegalArgumentException("Logo hajmi 5MB dan oshmasligi kerak");
+            }
+
+            // Fayl turini tekshirish (faqat rasm)
+            String contentType = logoFile.getContentType();
+            if (contentType == null || !contentType.startsWith("image")) {
+                throw new IllegalArgumentException("Faqat rasm fayllari yuklanishi mumkin (jpg, png, gif)");
+            }
+
+            // Logo saqlash
+            String subFolder = "brands/" + brand.getId();
+            String logoUrl = fileStorageService.store(logoFile, brand.getId(), FileStorageService.EntityType.BRANDS);
+
+            // Logo URL ni set qilish
+            brand.setLogoUrl(logoUrl);
+
+            // Yangi URL bilan qayta saqlash
+            brand = brandRepository.save(brand);
+        }
+
+        // 5. DTO qaytarish
+        return mapper.toBrandResponseDto(brand);
     }
 
     @Transactional

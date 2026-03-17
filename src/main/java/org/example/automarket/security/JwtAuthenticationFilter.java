@@ -107,15 +107,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/v3/api-docs/")
                 || path.equals("/swagger-ui.html")
                 || path.equals("/swagger-ui/index.html")
-                || path.startsWith("/api/auth/")
-                || path.startsWith("/webjars/")
-                || path.startsWith("/api/cars/get/**")   // 🔥 MUAMMO SHU
-                || path.startsWith("/api/cars/approved")
-                || path.startsWith("/api/cars/active")
-                || path.startsWith("/api/cars/search")
-                || path.startsWith("/api/cars/all/")
-                || path.startsWith("/api/models")
-                || path.startsWith("/api/brands")
-                || path.startsWith("/api/models/brand/");
+                || path.startsWith("/uploads/")
+                || path.startsWith("/api/files/download/")
+                || "OPTIONS".equals(request.getMethod());
     }
+
 }

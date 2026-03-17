@@ -1,11 +1,7 @@
 package org.example.automarket.controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.automarket.dto.BrandCreateRequest;
 import org.example.automarket.dto.BrandResponseDto;
 import org.example.automarket.dto.BrandUpdateRequest;
 import org.example.automarket.service.BrandService;
@@ -35,10 +31,19 @@ public class BrandController {
         return ResponseEntity.ok(brandService.getBrandById(id));
     }
 
-    @PostMapping
+    @PostMapping( consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BrandResponseDto> create(@Valid @RequestBody BrandCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(brandService.createBrand(request));
+    public ResponseEntity<BrandResponseDto> createBrand(
+            @RequestParam String name,
+            @RequestPart(value = "images", required = false) MultipartFile images) {
+
+        // Bo'shliklarni olib tashlab, tekshirish
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Brend nomi bo'sh bo'lishi mumkin emas");
+        }
+
+        BrandResponseDto dto = brandService.createBrand(name.trim(), images);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @PutMapping("/{id}")
@@ -58,15 +63,7 @@ public class BrandController {
     @PostMapping(value = "/{brandId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BrandResponseDto> updateBrandLogo(
-            @Parameter(description = "Brend ID si", required = true, example = "5")
             @PathVariable Long brandId,
-
-            @Parameter(
-                    description = "Yuklanadigan logo fayli (jpg/png, maksimal 5MB)",
-                    required = true,
-                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            schema = @Schema(type = "string", format = "binary"))
-            )
             @RequestParam("logo") MultipartFile logoFile) {
 
         // Service chaqiruvi — butun logika shu yerda

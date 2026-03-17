@@ -55,14 +55,20 @@ public interface CarAdRepository extends JpaRepository<CarAd, Long>, JpaSpecific
 
 
     @Query("""
-        SELECT c FROM CarAd c 
-        WHERE LOWER(c.model.brand.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-           OR LOWER(c.model.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-           OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        ORDER BY c.createdAt DESC
-    """)
-    Page<CarAd> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
-
+    SELECT c FROM CarAd c 
+    WHERE c.status = 'APPROVED'
+      AND (
+          :keyword IS NULL OR :keyword = '' OR
+          LOWER(c.model.brand.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+          LOWER(c.model.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+          LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+      )
+    ORDER BY c.createdAt DESC
+""")
+    Page<CarAd> searchApprovedCarsByKeyword(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
     // 2. Brand va Model ID lar bo'yicha filtr
     @Query("""
         SELECT c FROM CarAd c 

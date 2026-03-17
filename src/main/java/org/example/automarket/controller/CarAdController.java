@@ -1,6 +1,8 @@
 package org.example.automarket.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,9 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,12 +32,27 @@ import java.util.List;
 public class CarAdController {
 
     private final CarAdService carAdService;
+  //  private ObjectMapper objectMapper;
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
-    public ResponseEntity<CarAdDetailDto> create(@Valid @RequestBody CarAdCreateRequest request) {
-        CarAdDetailDto dto = carAdService.createCarAd(request, List.of());
-        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    @PostMapping( consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CarAdDetailDto> createCarAd(
+            @RequestPart("data") String dataJson,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+
+        try {
+
+            ObjectMapper objectMapper=new ObjectMapper();
+            CarAdCreateRequest request = objectMapper.readValue(dataJson, CarAdCreateRequest.class);
+
+            // Service chaqiruvi
+            CarAdDetailDto dto = carAdService.createCarAd(request, images);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Noto'g'ri JSON format: " + e.getMessage());
+        }
     }
 
 
@@ -129,17 +149,16 @@ public class CarAdController {
     }
 
 
-    @Operation(summary = "Mashina qidirish")
+    @Operation(summary = "Mashina qidirish (universal filtr)")
     @GetMapping("/search")
     public ResponseEntity<Page<CarAdSummaryDto>> searchCars(
-
-            @Parameter(description = "Qidiruv so'zi")
+            @Parameter(description = "Qidiruv so'zi (brand, model, tavsif)")
             @RequestParam(required = false) String keyword,
 
-            @Parameter(description = "Brand IDs")
+            @Parameter(description = "Brend ID lar (masalan 1,3,5)")
             @RequestParam(required = false) List<Long> brands,
 
-            @Parameter(description = "Model IDs")
+            @Parameter(description = "Model ID lar (masalan 7,8,10)")
             @RequestParam(required = false) List<Long> models,
 
             @Parameter(description = "Minimal narx")
@@ -154,13 +173,13 @@ public class CarAdController {
             @Parameter(description = "Maksimal yil")
             @RequestParam(required = false) Integer maxYear,
 
-            @Parameter(description = "Rang")
+            @Parameter(description = "Rang (bir nechta: QORA,KULRANG,OQ)")
             @RequestParam(required = false) List<String> color,
 
-            @Parameter(description = "Transmission")
+            @Parameter(description = "Transmission (bir nechta: AVTOMAT,MEXANIKA,CVT)")
             @RequestParam(required = false) List<String> transmission,
 
-            @Parameter(description = "Fuel type")
+            @Parameter(description = "Fuel Type (bir nechta: PETROL,DIESEL,GAS,HYBRID)")
             @RequestParam(required = false) List<String> fuelType,
 
             @RequestParam(defaultValue = "0") int page,
@@ -177,12 +196,25 @@ public class CarAdController {
 
         Page<CarAdSummaryDto> result;
 
+
+        boolean hasBrandOrModel = (brands != null && !brands.isEmpty()) || (models != null && !models.isEmpty());
+
+        if (hasBrandOrModel) {
+
+            keyword = null;
+        }
+
+
         if (keyword != null && !keyword.trim().isEmpty()) {
-
-            result = carAdService.searchByKeyword(keyword.trim(), pageable);
-
+            result = carAdService.searchCars(keyword.trim(), minPrice,
+                    maxPrice,
+                    minYear,
+                    maxYear,
+                    color,
+                    transmission,
+                    fuelType,
+                    pageable);
         } else {
-
             result = carAdService.searchApprovedCars(
                     brands,
                     models,

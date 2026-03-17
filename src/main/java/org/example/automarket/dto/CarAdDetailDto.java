@@ -27,8 +27,8 @@ public class CarAdDetailDto {
     private String fuelType;
     private String bodyType;
     private String description;
-    private String vin;
-    private String stateNumber;
+//    private String vin;
+//    private String stateNumber;
     private AdStatus status;
     private List<String> imageUrls;
     private UserResponseDto seller;

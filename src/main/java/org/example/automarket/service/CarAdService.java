@@ -4,10 +4,10 @@ package org.example.automarket.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.automarket.dto.*;
-import org.example.automarket.entity.enums.*;
 import org.example.automarket.entity.CarAd;
 import org.example.automarket.entity.Model;
 import org.example.automarket.entity.User;
+import org.example.automarket.entity.enums.*;
 import org.example.automarket.mapper.AutoMarketMapper;
 import org.example.automarket.repo.CarAdRepository;
 import org.example.automarket.repo.ModelRepository;
@@ -18,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +26,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -56,12 +57,17 @@ public class CarAdService {
 
         carAd = carAdRepository.save(carAd);
 
-        // Rasmlar bo'lsa yuklaymiz (hozircha bo'sh jo'natiladi)
-        if (!images.isEmpty()) {
-            carImageService.uploadImages(carAd.getId(), images);
+        List<String> uploadedImageUrls = new ArrayList<>();
+        if (images != null && !images.isEmpty()) {
+            uploadedImageUrls = carImageService.uploadImages(carAd.getId(), images);
         }
 
-        return mapper.toCarAdDetailDto(carAd);
+
+        CarAdDetailDto dto = mapper.toCarAdDetailDto(carAd);
+
+        dto.setImageUrls(uploadedImageUrls);
+
+        return dto;
     }
 
 
@@ -72,7 +78,7 @@ public class CarAdService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "E'lon topilmadi"));
 
         CarAdDetailDto dto = mapper.toCarAdDetailDto(carAd);
-       // dto.setFavorite(favoriteService.isFavorite(id));  // joriy user uchun
+       // dto.setFavorite(favoriteService.isFavorite(id));
         return dto;
     }
 
@@ -118,13 +124,13 @@ public class CarAdService {
             carAd.setDescription(request.getDescription());
         }
 
-        if (request.getVin() != null) {
-            carAd.setVin(request.getVin());
-        }
-
-        if (request.getStateNumber() != null) {
-            carAd.setStateNumber(request.getStateNumber());
-        }
+//        if (request.getVin() != null) {
+//            carAd.setVin(request.getVin());
+//        }
+//
+//        if (request.getStateNumber() != null) {
+//            carAd.setStateNumber(request.getStateNumber());
+//        }
 
         carAd.setUpdatedAt(LocalDateTime.now());
 
@@ -148,7 +154,6 @@ public class CarAdService {
     }
 
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
     public void moderateCarAd(Long id, ModerateCarAdRequest request) {
         CarAd carAd = carAdRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "E'lon topilmadi"));
@@ -209,7 +214,7 @@ public class CarAdService {
                 .collect(Collectors.toList());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+
     public List<CarAdSummaryDto> getAllCarsForAdmin() {
         List<CarAd> cars = carAdRepository.findAllByOrderByCreatedAtDesc();
         return cars.stream()
@@ -289,11 +294,63 @@ public class CarAdService {
 //        return page.map(mapper::toCarAdSummaryDto);
 //    }
 
-    public Page<CarAdSummaryDto> searchByKeyword(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return Page.empty(pageable);
+    @Transactional(readOnly = true)
+    public Page<CarAdSummaryDto> searchCars(
+            String keyword,
+            BigDecimal minPrice, BigDecimal maxPrice,
+            Integer minYear, Integer maxYear,
+            List<String> colors,
+            List<String> transmissions,
+            List<String> fuelTypes,
+            Pageable pageable) {
+
+        Specification<CarAd> spec = Specification.where(
+                CarAdSpecification1.hasStatus(AdStatus.APPROVED)
+        );
+
+        // Keyword filtr (agar bo‘lsa)
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String likePattern = "%" + keyword.trim().toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("model").get("brand").get("name")), likePattern),
+                    cb.like(cb.lower(root.get("model").get("name")), likePattern),
+                    cb.like(cb.lower(root.get("description")), likePattern)
+            ));
         }
-        Page<CarAd> page = carAdRepository.searchByKeyword(keyword.trim(), pageable);
+
+
+        // Narx oralig'i
+        if (minPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+        }
+
+        // Yil oralig'i
+        if (minYear != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("year"), minYear));
+        }
+        if (maxYear != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("year"), maxYear));
+        }
+
+        // Rang (IN)
+        if (colors != null && !colors.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("color").in(colors));
+        }
+
+        // Transmission (IN)
+        if (transmissions != null && !transmissions.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("transmission").in(transmissions));
+        }
+
+        // Fuel Type (IN)
+        if (fuelTypes != null && !fuelTypes.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("fuelType").in(fuelTypes));
+        }
+
+        Page<CarAd> page = carAdRepository.findAll(spec, pageable);
         return page.map(mapper::toCarAdSummaryDto);
     }
 
@@ -381,7 +438,6 @@ public class CarAdService {
 
         return page.map(mapper::toCarAdSummaryDto);
     }
-
 
 
 

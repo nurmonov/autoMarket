@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class BrandResponseDto {
     private Long id;
     private String name;
-    private String logoUrl;     // agar logo bo'lsa
+    private String logoUrl;
 }

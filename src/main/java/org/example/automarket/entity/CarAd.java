@@ -57,9 +57,9 @@ public class CarAd {
 
     private String description;
 
-    private String vin;
-
-    private String stateNumber;
+//    private String vin;
+//
+//    private String stateNumber;
 
     @Enumerated(EnumType.STRING)
     private AdStatus status = AdStatus.PENDING;
@@ -67,7 +67,7 @@ public class CarAd {
     private boolean isFeatured = false;
 
     @Builder.Default
-    @OneToMany(mappedBy = "carAd", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "carAd", cascade = CascadeType.ALL,fetch = FetchType.LAZY, orphanRemoval = true)
     private List<CarImage> images = new ArrayList<>();
 
 

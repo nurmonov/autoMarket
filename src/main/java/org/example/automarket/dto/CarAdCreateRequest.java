@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CarAdCreateRequest {
+    private Long brandId;
     private Long modelId;
     private Integer year;
     private BigDecimal price;
@@ -22,8 +23,8 @@ public class CarAdCreateRequest {
     private String fuelType;
     private String bodyType;
     private String description;
-    private String vin;
-    private String stateNumber;
+//    private String vin;
+//    private String stateNumber;
 
 
 }
